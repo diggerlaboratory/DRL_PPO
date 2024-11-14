@@ -8,7 +8,7 @@ print("=========================================================================
 # set device to cpu or cuda
 device = torch.device('cpu')
 if(torch.cuda.is_available()): 
-    device = torch.device('cuda:0') 
+    device = torch.device('cuda') 
     torch.cuda.empty_cache()
     print("Device set to : " + str(torch.cuda.get_device_name(device)))
 else:
@@ -130,6 +130,7 @@ class ActorCritic(nn.Module):
                             nn.Linear(64, 1)
                         )
         elif nn_ver==2:
+            print(f"nnver:{nn_ver}")
             # actor
             if has_continuous_action_space :
                 self.actor = nn.Sequential(
@@ -172,6 +173,71 @@ class ActorCritic(nn.Module):
                             nn.Linear(64, 64),
                             nn.Tanh(),
                             nn.Linear(64, 32),
+                            nn.Tanh(),
+                            nn.Linear(32, 1),
+                        )
+        elif nn_ver==3:
+            print(f"nnver:{nn_ver}")
+            # actor
+            if has_continuous_action_space :
+                self.actor = nn.Sequential(
+                                nn.Linear(state_dim, 256),
+                                nn.Tanh(),
+                                nn.Linear(256, 128),
+                                nn.Tanh(),
+                                nn.Linear(128, 128),
+                                nn.Tanh(),
+                                nn.Linear(128, 64),
+                                nn.Tanh(),
+                                nn.Linear(64, 64),
+                                nn.Tanh(),
+                                nn.Linear(64, 64),
+                                nn.Tanh(),
+                                nn.Linear(64, 32),
+                                nn.Tanh(),
+                                nn.Linear(32, 32),
+                                nn.Tanh(),
+                                nn.Linear(32, action_dim),
+                                nn.Tanh()
+                            )
+            else:
+                self.actor = nn.Sequential(
+                                nn.Linear(state_dim, 256),
+                                nn.Tanh(),
+                                nn.Linear(256, 128),
+                                nn.Tanh(),
+                                nn.Linear(128, 128),
+                                nn.Tanh(),
+                                nn.Linear(128, 64),
+                                nn.Tanh(),
+                                nn.Linear(64, 64),
+                                nn.Tanh(),
+                                nn.Linear(64, 64),
+                                nn.Tanh(),
+                                nn.Linear(64, 32),
+                                nn.Tanh(),
+                                nn.Linear(32, 32),
+                                nn.Tanh(),
+                                nn.Linear(32, action_dim),
+                                nn.Tanh()
+                            )
+            # critic
+            self.critic = nn.Sequential(
+                            nn.Linear(state_dim, 256),
+                            nn.Tanh(),
+                            nn.Linear(256, 128),
+                            nn.Tanh(),
+                            nn.Linear(128, 128),
+                            nn.Tanh(),
+                            nn.Linear(128, 64),
+                            nn.Tanh(),
+                            nn.Linear(64, 64),
+                            nn.Tanh(),
+                            nn.Linear(64, 64),
+                            nn.Tanh(),
+                            nn.Linear(64, 32),
+                            nn.Tanh(),
+                            nn.Linear(32, 32),
                             nn.Tanh(),
                             nn.Linear(32, 1),
                         )
@@ -247,7 +313,7 @@ class PPO:
                         {'params': self.policy.critic.parameters(), 'lr': lr_critic}
                     ])
 
-        self.policy_old = ActorCritic(state_dim, action_dim, has_continuous_action_space, action_std_init).to(device)
+        self.policy_old = ActorCritic(state_dim, action_dim, has_continuous_action_space, action_std_init,nn_ver=nn_ver).to(device)
         self.policy_old.load_state_dict(self.policy.state_dict())
         
         self.MseLoss = nn.MSELoss()

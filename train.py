@@ -11,11 +11,12 @@ import gym
 from PPO import PPO
 
 ################################### Training ###################################
+# CUDA_VISIBLE_DEVICES=3
 def train():
     print("============================================================================================")
     env_names = ["Hopper-v4","InvertedDoublePendulum-v4","Walker2d-v4","Pendulum-v1"]
-    nn_ver = 0
-    env_no = 0
+    nn_ver = 3
+    env_no = 3
     env_name = env_names[env_no]
     ####### initialize environment hyperparameters ######
     # env_name = "RoboschoolWalker2d-v1"
@@ -23,7 +24,7 @@ def train():
     has_continuous_action_space = True  # continuous action space; else discrete
 
     max_ep_len = 1000                   # max timesteps in one episode
-    max_training_timesteps = int(3e6)   # break training loop if timeteps > max_training_timesteps
+    max_training_timesteps = int(3e8)   # break training loop if timeteps > max_training_timesteps
 
     print_freq = max_ep_len * 10        # print avg reward in the interval (in num timesteps)
     log_freq = max_ep_len * 2           # log avg reward in the interval (in num timesteps)
@@ -172,8 +173,7 @@ def train():
         state = env.reset()[0]
         current_ep_reward = 0
         for t in range(1, max_ep_len+1):
-            if time_step %100 ==0:
-                print(f"timestep: {time_step}")
+            
             # select action with policy
             action = ppo_agent.select_action(state)
             state, reward, done, truncat,info = env.step(action)
@@ -282,7 +282,6 @@ def do_test(env_name,agent):
             action = action.detach().cpu().numpy().flatten()
             state, reward, done, truncat,info = env.step(action)
             state = torch.FloatTensor(state).to(device)
-            print(t,action,reward)
             ep_reward += reward
             if done or truncat:
                 break
